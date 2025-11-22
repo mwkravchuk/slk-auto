@@ -1,26 +1,27 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* SLK brand theme tokens */
+@theme {
+  --color-brand-primary: #0b4f7c;        /* deep blue */
+  --color-brand-dark: #10101e;
+  --color-brand-surface: #384950;        /* blue-grey */
+  --color-brand-accent: #f4c041;         /* gold */
+  --color-brand-primary-soft: #1269a5;   /* lighter blue */
+  --color-brand-accent-soft: #fbe4a3;    /* soft gold */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* Global base styles */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  height: 100%;
+}
+
+/* Light-mode base */
+body {
+  @apply bg-slate-100 text-slate-900 antialiased;
+}
+
+a {
+  @apply transition-colors;
 }
