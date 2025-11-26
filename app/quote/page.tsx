@@ -3,21 +3,20 @@ import { QuoteForm } from "@/components/QuoteForm";
 
 export default function QuotePage() {
   return (
-    <main className="py-10">
+    <div className="mx-auto max-w-5xl px-4 py-10 md:px-6 md:py-12">
       <div className="max-w-2xl">
-        <h1 className="text-3xl font-semibold mb-2">
-          Request a Mobile Repair Quote
+        <h1 className="mb-2 text-3xl font-semibold text-slate-900">
+          Request a mobile repair quote
         </h1>
-        <p className="text-slate-300 mb-8">
-          Fill out a few details about your vehicle and the work you need. SLK
-          Auto Repair will follow up with an estimated price and time window.
+        <p className="mb-8 text-sm text-slate-600">
+          Tell us a bit about your vehicle and what you need done. SLK Auto
+          Repair will follow up with an estimated price and time window.
         </p>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+        <div className="border border-slate-200 bg-white px-5 py-6 md:px-6 md:py-7">
           <QuoteForm />
         </div>
       </div>
-    </main>
+    </div>
   );
 }
-

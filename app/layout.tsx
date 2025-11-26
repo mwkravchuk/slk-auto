@@ -49,7 +49,6 @@ export default function RootLayout({
             <div className="relative flex items-center">
               {/* Left spacer to balance the layout */}
               <div className="flex-1">
-                SITE UNDER CONSTRUCTION!!
               </div>
 
               {/* Centered logo */}
