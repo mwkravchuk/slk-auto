@@ -44,37 +44,42 @@ export default function RootLayout({
     <html lang="en">
       <body className={`min-h-screen flex flex-col bg-white text-slate-900 ${inter.className}`}>
         {/* Dark header frame */}
-        <header className="bg-brand-dark text-brand-accent">
-          <div className="mx-auto max-w-5xl px-4 py-10 md:px-6">
-            <div className="relative flex items-center">
-              {/* Left spacer to balance the layout */}
-              <div className="flex-1">
-              </div>
+        <header className="bg-brand-dark text-slate-50">
+          <div className="mx-auto grid max-w-5xl grid-cols-3 items-center px-4 md:px-6">
+            {/* Left column: empty spacer (keeps logo truly centered) */}
+            <div />
 
-              {/* Centered logo */}
-              <Link
-                href="/"
-                className="absolute left-1/2 -translate-x-1/2 flex items-center"
+            {/* Center: logo */}
+            <Link href="/" className="flex justify-center">
+              <Image
+                src="/images/slk-logo.jpeg"
+                alt="SLK Auto Repair logo"
+                width={260}
+                height={80}
+                className="h-20 w-auto md:h-26"
+                priority
+              />
+            </Link>
+
+            {/* Right: phone (always occupies the column, but hides text on mobile) */}
+            <div className="flex justify-end">
+              <a
+                href="tel:+19161231234"
+                className="inline-flex items-center gap-2 text-sm font-medium text-brand-accent"
               >
-                <Image
-                  src="/images/slk-logo.jpeg"
-                  alt="SLK Auto Repair logo"
-                  width={984}   // intrinsic size, just for aspect ratio
-                  height={727}
-                  className="h-22 w-auto md:h-25"
-                />
-              </Link>
-
-              {/* Right side: phone */}
-              <div className="flex flex-1 justify-end">
-                <a
-                  href="tel:+1-555-555-5555" // replace with Sam's real number
-                  className="hidden items-center text-m md:flex gap-1"
+                {/* icon */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="h-4 w-4"
                 >
-                  <PhoneIcon className="h-5 w-5" />
-                  <span className="font-medium">916-123-1234</span>
-                </a>
-              </div>
+                  <path d="M2.25 6.75c0 7.455 6.045 13.5 13.5 13.5.966 0 1.91-.102 2.823-.297a1.125 1.125 0 00.927-1.102v-3.345a1.125 1.125 0 00-.84-1.086l-3.21-.803a1.125 1.125 0 00-1.173.417l-1.04 1.39a10.522 10.522 0 01-4.7-4.7l1.39-1.04a1.125 1.125 0 00.417-1.173l-.803-3.21a1.125 1.125 0 00-1.086-.84H3.647a1.125 1.125 0 00-1.102.927c-.195.913-.297 1.857-.297 2.823z" />
+                </svg>
+
+                {/* hide number on small screens but keep the element present */}
+                <span className="hidden sm:inline">916-123-1234</span>
+              </a>
             </div>
           </div>
         </header>
@@ -103,7 +108,7 @@ export default function RootLayout({
                   Phone: <span className="font-medium">916-123-1234</span>
                 </p>
                 <p className="text-xs">
-                  Email: <span className="font-medium">quotes@slkautorepair.com</span>
+                  Email: <span className="font-medium">slkautorepair@gmail.com</span>
                 </p>
                 <p className="text-xs">
                   Service area: Sacramento and nearby neighborhoods.
