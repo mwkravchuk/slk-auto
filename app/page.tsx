@@ -1,8 +1,25 @@
 // src/app/page.tsx
 import Link from "next/link";
 import Image from "next/image";
+import { isHoldingSite } from "@/lib/siteMode";
+
+function HoldingPage() {
+  return (
+    <section className="flex min-h-screen items-center justify-center bg-white px-4 text-slate-900">
+      <div className="max-w-xl text-center">
+        <h1 className="text-2xl font-medium leading-snug md:text-3xl">
+          This website is a work in progress.
+        </h1>
+      </div>
+    </section>
+  );
+}
 
 export default function HomePage() {
+  if (isHoldingSite()) {
+    return <HoldingPage />;
+  }
+
   return (
     <div className="space-y-10 md:space-y-12">
     {/* FULL-WIDTH HERO */}

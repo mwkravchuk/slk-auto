@@ -57,9 +57,11 @@ export function QuoteForm() {
 
       setStatus("success");
       setForm(initialForm);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatus("error");
-      setErrorMessage(err.message || "Something went wrong.");
+      setErrorMessage(
+        err instanceof Error ? err.message : "Something went wrong."
+      );
     } finally {
       setIsSubmitting(false);
     }

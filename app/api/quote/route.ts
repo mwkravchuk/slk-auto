@@ -1,11 +1,18 @@
 // src/app/api/quote/route.ts
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { isHoldingSite } from "@/lib/siteMode";
 
 export async function POST(req: Request) {
+  if (isHoldingSite()) {
+    return NextResponse.json(
+      { error: "Quote requests are not available." },
+      { status: 404 }
+    );
+  }
+
   try {
+    const resend = new Resend(process.env.RESEND_API_KEY);
     const body = await req.json();
 
     const {
