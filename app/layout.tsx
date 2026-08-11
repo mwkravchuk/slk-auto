@@ -1,6 +1,6 @@
 // src/app/layout.tsx
 
-import { Inter } from "next/font/google";
+import { Manrope } from "next/font/google";
 
 import type { Metadata } from "next";
 import "./globals.css";
@@ -8,10 +8,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { isHoldingSite } from "@/lib/siteMode";
 
-const inter = Inter({
+const manrope = Manrope({
   subsets: ["latin"],
   display: "swap",
 });
+
+const instagramUrl = "https://www.instagram.com/slk_autorepair/";
+const barRegistrationLabel = "BAR ARD #: pending";
+const contactPhoneDisplay = "916-123-1234";
+const contactSmsHref = "sms:+19161231234";
 
 export function generateMetadata(): Metadata {
   if (isHoldingSite()) {
@@ -24,7 +29,7 @@ export function generateMetadata(): Metadata {
   return {
     title: "SLK Auto Repair - Mobile Auto Repair in Sacramento",
     description:
-      "Mobile auto repair that comes to you. Brakes, oil changes, diagnostics, and more from SLK Auto Repair in the Sacramento area.",
+      "Request a clear quote for mobile auto repair in the Sacramento area. Oil changes, brakes, diagnostics, battery help, and more from SLK Auto Repair.",
   };
 }
 
@@ -41,76 +46,88 @@ export default function RootLayout({
       <body
         className={`min-h-screen flex flex-col ${
           isHolding ? "bg-brand-dark text-slate-50" : "bg-white text-slate-900"
-        } ${inter.className}`}
+        } ${manrope.className}`}
       >
         {isHolding ? (
           <main className="flex-1">{children}</main>
         ) : (
           <>
             {/* Dark header frame */}
-            <header className="bg-brand-dark text-slate-50">
-              <div className="mx-auto grid max-w-5xl grid-cols-3 items-center px-4 md:px-6">
-                {/* Left column: empty spacer (keeps logo truly centered) */}
-                <div />
-
-                {/* Center: logo */}
-                <Link href="/" className="flex justify-center">
+            <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#0f0e1a]/95 text-slate-50 backdrop-blur">
+              <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-3 px-4 md:h-[72px] md:px-6">
+                <Link href="/" className="flex shrink-0">
                   <Image
-                    src="/images/slk-logo.jpeg"
+                    src="/images/slk-logo-transparent.png"
                     alt="SLK Auto Repair logo"
-                    width={984}
-                    height={727}
-                    className="h-20 w-auto max-w-full object-contain md:h-24"
+                    width={703}
+                    height={201}
+                    className="h-8 w-auto max-w-full object-contain md:h-10"
                     priority
                   />
                 </Link>
 
-                {/* Right: phone (always occupies the column, but hides text on mobile) */}
-                <div className="flex justify-end">
+                <nav
+                  className="flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.14em] text-slate-300 md:gap-5"
+                  aria-label="Main navigation"
+                >
+                  <Link href="/services" className="hover:text-brand-accent">
+                    Services
+                  </Link>
+                  <Link
+                    href="/#about"
+                    className="hidden hover:text-brand-accent sm:inline"
+                  >
+                    About me
+                  </Link>
+                </nav>
+
+                <div className="flex shrink-0 justify-end">
                   <a
-                    href="tel:+19161231234"
+                    href={contactSmsHref}
+                    aria-label="Text SLK Auto Repair"
                     className="inline-flex items-center gap-2 text-sm font-medium text-brand-accent"
                   >
-                    {/* icon */}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
-                      fill="currentColor"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                       className="h-4 w-4"
+                      aria-hidden="true"
                     >
-                      <path d="M2.25 6.75c0 7.455 6.045 13.5 13.5 13.5.966 0 1.91-.102 2.823-.297a1.125 1.125 0 00.927-1.102v-3.345a1.125 1.125 0 00-.84-1.086l-3.21-.803a1.125 1.125 0 00-1.173.417l-1.04 1.39a10.522 10.522 0 01-4.7-4.7l1.39-1.04a1.125 1.125 0 00.417-1.173l-.803-3.21a1.125 1.125 0 00-1.086-.84H3.647a1.125 1.125 0 00-1.102.927c-.195.913-.297 1.857-.297 2.823z" />
+                      <path d="M21 12a8.5 8.5 0 0 1-8.5 8.5 8.9 8.9 0 0 1-3.7-.8L3 21l1.3-5.2a8.5 8.5 0 1 1 16.7-3.8Z" />
+                      <path d="M8 10.5h8" />
+                      <path d="M8 14h5.5" />
                     </svg>
 
-                    {/* hide number on small screens but keep the element present */}
-                    <span className="hidden sm:inline">916-123-1234</span>
+                    <span>Text</span>
                   </a>
                 </div>
               </div>
             </header>
 
             {/* Page content */}
-            <main className="flex-1">{children}</main>
+            <main className="flex-1 pt-16 md:pt-[72px]">{children}</main>
 
             {/* Dark footer frame */}
-            <footer className="mt-8 border-t border-slate-700 bg-brand-dark text-slate-500">
+            <footer className="border-t border-slate-700 bg-brand-dark text-slate-500">
               <div className="mx-auto max-w-5xl px-4 py-10 md:px-6 md:py-12">
-                <div className="grid gap-8 md:grid-cols-3">
-                  <div className="space-y-2 text-slate-400">
-                    <h3 className="text-sm font-semibold text-slate-300">
-                      SLK Auto Repair
-                    </h3>
-                    <p className="text-xs max-w-xs">
-                      Mobile auto repair that comes to you. Brakes, oil
-                      changes, diagnostics, and more in the Sacramento area.
-                    </p>
-                  </div>
-
+                <div className="grid gap-8 md:grid-cols-2">
                   <div className="space-y-2 text-slate-400">
                     <h4 className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">
                       Contact
                     </h4>
                     <p className="text-xs">
-                      Phone: <span className="font-medium">916-123-1234</span>
+                      Text:{" "}
+                      <a
+                        href={contactSmsHref}
+                        className="font-medium hover:text-brand-accent"
+                      >
+                        {contactPhoneDisplay}
+                      </a>
                     </p>
                     <p className="text-xs">
                       Email:{" "}
@@ -121,6 +138,7 @@ export default function RootLayout({
                     <p className="text-xs">
                       Service area: Sacramento and nearby neighborhoods.
                     </p>
+                    <p className="text-xs">{barRegistrationLabel}</p>
                   </div>
 
                   <div className="space-y-2 text-slate-400">
@@ -128,16 +146,53 @@ export default function RootLayout({
                       Quick links
                     </h4>
                     <div className="flex flex-col gap-1 text-xs">
+                      <Link
+                        href="/services"
+                        className="hover:text-brand-accent"
+                      >
+                        Services
+                      </Link>
+                      <Link href="/#about" className="hover:text-brand-accent">
+                        About me
+                      </Link>
                       <Link href="/quote" className="hover:text-brand-accent">
                         Request a quote
                       </Link>
+                      <a
+                        href={instagramUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label="SLK Auto Repair on Instagram"
+                        className="mt-2 inline-flex w-fit items-center gap-2 text-slate-300 hover:text-brand-accent"
+                      >
+                        <svg
+                          aria-hidden="true"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="h-4 w-4"
+                        >
+                          <rect
+                            width="16"
+                            height="16"
+                            x="4"
+                            y="4"
+                            rx="4"
+                          />
+                          <circle cx="12" cy="12" r="3.25" />
+                          <path d="M16.5 7.5h.01" />
+                        </svg>
+                        <span>Instagram</span>
+                      </a>
                     </div>
                   </div>
                 </div>
 
                 <div className="mt-8 border-t border-slate-800 pt-4 text-[11px] text-slate-500 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                  <p>© {year} SLK Auto Repair. All rights reserved.</p>
-                  <p>Website by Mark Kravchuk.</p>
+                  <p>© {year} SLK Auto Repair.</p>
                 </div>
               </div>
             </footer>
