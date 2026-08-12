@@ -3,6 +3,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { isHoldingSite } from "@/lib/siteMode";
 
+const quickServiceLinks = [
+  { label: "Oil change", href: "/quote?service=oil_change" },
+  { label: "Brakes", href: "/quote?service=brakes" },
+  { label: "Battery", href: "/quote?service=battery_replacement" },
+  { label: "Check engine light", href: "/quote?service=diagnostics" },
+  { label: "Not sure yet", href: "/quote?service=other" },
+];
+
 function HoldingPage() {
   return (
     <section className="flex min-h-screen items-center justify-center bg-white px-4 text-slate-900">
@@ -69,27 +77,19 @@ export default function HomePage() {
       </section>
 
       <section id="services" className="scroll-mt-20 bg-white py-14 md:py-16">
-        <div className="mx-auto max-w-5xl space-y-6 px-4 md:px-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div className="max-w-2xl space-y-2">
-              <h2 className="text-2xl font-semibold text-slate-950 md:text-3xl">
-                What I can help with
-              </h2>
-              <p className="text-sm leading-6 text-slate-600">
-                Common mobile services for everyday maintenance and repairs.
-                The full services page has rough time ranges and quote guidance
-                when you want more detail.
-              </p>
-            </div>
-            <Link
-              href="/services"
-              className="text-sm font-semibold text-brand-primary underline underline-offset-4 transition-colors hover:text-brand-primary-soft"
-            >
-              View service menu
-            </Link>
+        <div className="mx-auto max-w-5xl px-4 md:px-6">
+          <div className="max-w-2xl space-y-2">
+            <h2 className="text-2xl font-semibold text-slate-950 md:text-3xl">
+              What I can help with
+            </h2>
+            <p className="text-sm leading-6 text-slate-600">
+              Common mobile services for everyday maintenance and repairs. The
+              full services page has rough time ranges and quote guidance when
+              you want more detail.
+            </p>
           </div>
 
-          <div className="space-y-7 md:space-y-8">
+          <div className="mt-8 space-y-7 md:mt-10 md:space-y-4">
             <article className="md:flex md:items-center md:gap-8">
               <div className="relative h-52 w-full overflow-hidden bg-slate-100 sm:h-64 md:w-[46%]">
                 <Image
@@ -154,6 +154,31 @@ export default function HomePage() {
                 </p>
               </div>
             </article>
+          </div>
+
+          <div className="mt-9 border-t border-slate-200 pt-8 pb-2 md:mt-16 md:flex md:items-center md:justify-between md:gap-8 md:border-t-0 md:pt-0">
+            <div className="space-y-4">
+              <h3 className="text-2xl font-semibold leading-tight text-slate-950">
+                Need help with your car?
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {quickServiceLinks.map((service) => (
+                  <Link
+                    key={service.label}
+                    href={service.href}
+                    className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-800 transition-colors hover:border-brand-primary hover:bg-brand-accent-soft/60 hover:text-brand-primary"
+                  >
+                    {service.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+            <Link
+              href="/services"
+              className="mt-5 inline-flex w-full items-center justify-center bg-brand-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-soft sm:w-auto md:mt-0 md:shrink-0"
+            >
+              Choose a service
+            </Link>
           </div>
         </div>
       </section>
