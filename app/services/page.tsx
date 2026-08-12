@@ -64,8 +64,8 @@ export default function ServicesPage() {
             Services
           </h1>
           <p className="max-w-2xl text-xs leading-5 text-slate-500 md:text-right">
-            We will confirm the final quote after reviewing the vehicle
-            details.
+            Choose a service to start a quote. We will confirm the final quote
+            after reviewing the vehicle details.
           </p>
         </div>
 
@@ -76,7 +76,8 @@ export default function ServicesPage() {
                 <Link
                   key={service.id}
                   href={`/quote?service=${service.id}`}
-                  className="group flex min-h-full flex-col overflow-hidden border border-slate-200 bg-white shadow-sm transition-all duration-200 ease-out hover:border-brand-primary/60 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
+                  aria-label={`Request a quote for ${service.name}`}
+                  className="group flex min-h-full cursor-pointer flex-col overflow-hidden border border-slate-200 bg-white shadow-sm transition-all duration-200 ease-out hover:border-brand-primary/70 hover:shadow-lg hover:ring-1 hover:ring-brand-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
                 >
                   {service.imageSrc && (
                     <div className="relative h-48 w-full overflow-hidden bg-slate-100 md:h-52">
@@ -125,9 +126,27 @@ export default function ServicesPage() {
                       </div>
                     </div>
 
-                    <span className="text-sm font-semibold text-brand-primary transition-colors group-hover:text-brand-primary-soft">
-                      Start quote
-                    </span>
+                    <div className="flex items-center justify-between text-sm font-semibold text-brand-primary transition-colors group-hover:text-brand-primary-soft">
+                      <span>Request this service</span>
+                      <span
+                        aria-hidden="true"
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-accent text-brand-dark transition-all duration-200 ease-out group-hover:translate-x-0.5 group-hover:bg-brand-primary group-hover:text-white"
+                      >
+                        <svg
+                          viewBox="0 0 20 20"
+                          fill="none"
+                          className="h-4 w-4"
+                        >
+                          <path
+                            d="M4 10h10m-4-4 4 4-4 4"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </span>
+                    </div>
                   </div>
                 </Link>
               ))}

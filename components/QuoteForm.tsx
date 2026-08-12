@@ -2,7 +2,6 @@
 
 import { useState, type FormEvent } from "react";
 import {
-  getServiceMenuItem,
   normalizeServiceId,
   quoteServiceOptions,
 } from "@/lib/services";
@@ -39,6 +38,7 @@ const blankForm: QuoteFormData = {
 
 type QuoteFormProps = {
   initialServiceType?: string;
+  onServiceTypeChange?: (serviceType: string) => void;
 };
 
 function createInitialForm(initialServiceType?: string): QuoteFormData {
@@ -52,14 +52,16 @@ function RequiredMark() {
   return <span className="text-red-500">*</span>;
 }
 
-export function QuoteForm({ initialServiceType }: QuoteFormProps) {
+export function QuoteForm({
+  initialServiceType,
+  onServiceTypeChange,
+}: QuoteFormProps) {
   const [form, setForm] = useState<QuoteFormData>(() =>
     createInitialForm(initialServiceType)
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
-  const selectedService = getServiceMenuItem(form.serviceType);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -79,8 +81,10 @@ export function QuoteForm({ initialServiceType }: QuoteFormProps) {
         throw new Error(data.error || "Failed to send quote request.");
       }
 
+      const resetForm = createInitialForm(initialServiceType);
       setStatus("success");
-      setForm(createInitialForm(initialServiceType));
+      setForm(resetForm);
+      onServiceTypeChange?.(resetForm.serviceType);
     } catch (err: unknown) {
       setStatus("error");
       setErrorMessage(
@@ -96,28 +100,23 @@ export function QuoteForm({ initialServiceType }: QuoteFormProps) {
     value: QuoteFormData[K]
   ) {
     setForm((prev) => ({ ...prev, [key]: value }));
+
+    if (key === "serviceType") {
+      onServiceTypeChange?.(normalizeServiceId(value));
+    }
   }
 
   const inputBase =
     "w-full border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary";
   const labelBase = "mb-1 block text-xs font-semibold text-slate-800";
-  const helperBase = "mt-1 text-[11px] leading-4 text-slate-500";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      <div className="border border-brand-accent bg-[#fff8df] px-4 py-3 text-sm leading-6 text-slate-800">
-        This starts the quote conversation. We will confirm exact pricing,
-        parts, timing, and availability before any work is booked.
-      </div>
-
+    <form onSubmit={handleSubmit} className="space-y-7">
       <section className="space-y-4">
-        <div className="flex flex-col gap-1">
+        <div>
           <h2 className="text-base font-semibold text-slate-950">
             Contact details
           </h2>
-          <p className="text-xs text-slate-500">
-            Required so we can reply with the estimate and next step.
-          </p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -162,21 +161,17 @@ export function QuoteForm({ initialServiceType }: QuoteFormProps) {
               value={form.phone}
               onChange={(e) => updateField("phone", e.target.value)}
               autoComplete="tel"
-              placeholder="Helpful for faster scheduling"
+              placeholder="Text preferred"
             />
           </div>
         </div>
       </section>
 
       <section className="space-y-4">
-        <div className="flex flex-col gap-1">
+        <div>
           <h2 className="text-base font-semibold text-slate-950">
             Vehicle information
           </h2>
-          <p className="text-xs text-slate-500">
-            Year, make, and model are required because parts and labor can vary
-            by vehicle.
-          </p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
@@ -261,22 +256,17 @@ export function QuoteForm({ initialServiceType }: QuoteFormProps) {
               className={inputBase}
               value={form.vin}
               onChange={(e) => updateField("vin", e.target.value)}
+              placeholder="17 characters"
             />
-            <p className={helperBase}>
-              Found on registration, insurance, or inside the driver door.
-            </p>
           </div>
         </div>
       </section>
 
       <section className="space-y-4">
-        <div className="flex flex-col gap-1">
+        <div>
           <h2 className="text-base font-semibold text-slate-950">
             Service request
           </h2>
-          <p className="text-xs text-slate-500">
-            Choose the closest menu item and describe what you are noticing.
-          </p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -316,39 +306,10 @@ export function QuoteForm({ initialServiceType }: QuoteFormProps) {
           </div>
         </div>
 
-        {selectedService && (
-          <div className="border border-slate-200 bg-slate-50 px-4 py-3">
-            <div className="grid gap-3 text-sm sm:grid-cols-2">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                  Typical time
-                </p>
-                <p className="mt-1 font-semibold text-slate-950">
-                  {selectedService.typicalTime}
-                </p>
-              </div>
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                  Price guide
-                </p>
-                <p className="mt-1 font-semibold text-slate-950">
-                  {selectedService.priceNote}
-                </p>
-              </div>
-            </div>
-            <details className="mt-3 text-xs leading-5 text-slate-600">
-              <summary className="cursor-pointer font-semibold text-slate-800">
-                Quote note
-              </summary>
-              <p className="mt-2">{selectedService.quoteHint}</p>
-            </details>
-          </div>
-        )}
-
         {form.serviceType === "other" && (
           <div className="border border-brand-accent bg-[#fff8df] px-4 py-3 text-xs leading-5 text-slate-700">
-            Not sure is fine. Use the notes box to describe what changed, what
-            you hear or see, and whether the car is safe to drive.
+            Not sure is fine. Describe what changed, what you hear or see, and
+            whether the car is safe to drive.
           </div>
         )}
 
@@ -361,7 +322,7 @@ export function QuoteForm({ initialServiceType }: QuoteFormProps) {
             className={`${inputBase} min-h-28 resize-y`}
             value={form.description}
             onChange={(e) => updateField("description", e.target.value)}
-            placeholder="Include symptoms, warning lights, noises, when it started, and anything already checked."
+            placeholder="Symptoms, warning lights, noises, when it started, or anything already checked."
             required
           />
         </div>
@@ -370,8 +331,7 @@ export function QuoteForm({ initialServiceType }: QuoteFormProps) {
       <div className="space-y-4 border-t border-slate-200 pt-5">
         {status === "success" && (
           <div className="border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-5 text-emerald-800">
-            Thanks. Your request has been sent. We will review the vehicle
-            details and follow up with the next step.
+            Sent. We will review the details and follow up with the next step.
           </div>
         )}
         {status === "error" && (
@@ -385,13 +345,12 @@ export function QuoteForm({ initialServiceType }: QuoteFormProps) {
           disabled={isSubmitting}
           className="inline-flex w-full items-center justify-center bg-brand-primary px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-soft disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
         >
-          {isSubmitting ? "Sending..." : "Send quote request"}
+          {isSubmitting ? "Sending..." : "Send request"}
         </button>
 
         <p className="text-[11px] leading-5 text-slate-500">
           By submitting, you agree to be contacted by SLK Auto Repair about this
-          request. Final pricing is confirmed after we review the vehicle and
-          job details.
+          request.
         </p>
       </div>
     </form>
