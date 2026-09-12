@@ -4,17 +4,19 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isHoldingSite } from "@/lib/siteMode";
 import { serviceMenu, type ServiceMenuItem } from "@/lib/services";
+import { RideshareInspectionGraphic } from "@/components/RideshareInspectionGraphic";
 
 export const metadata: Metadata = {
   title: "Services - SLK Auto Repair",
   description:
-    "View common SLK Auto Repair mobile mechanic services, planning times, and quote guidance.",
+    "View common SLK Auto Repair mobile mechanic services, rideshare inspections, planning times, and quote guidance.",
 };
 
 const obviousServiceIds = [
   "oil_change",
   "brakes",
   "battery_replacement",
+  "rideshare_inspection",
 ] as const;
 
 const issueCards: Array<{
@@ -51,6 +53,28 @@ function servicesForIds(serviceIds: readonly string[]) {
     .filter((service): service is ServiceMenuItem => Boolean(service));
 }
 
+function ServiceVisual({ service }: { service: ServiceMenuItem }) {
+  if (service.imageSrc) {
+    return (
+      <div className="relative h-48 w-full overflow-hidden bg-slate-100 md:h-52">
+        <Image
+          src={service.imageSrc}
+          alt={service.imageAlt ?? ""}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          className="object-cover transition-transform duration-200 ease-out group-hover:scale-[1.03]"
+        />
+      </div>
+    );
+  }
+
+  if (service.id === "rideshare_inspection") {
+    return <RideshareInspectionGraphic />;
+  }
+
+  return null;
+}
+
 export default function ServicesPage() {
   if (isHoldingSite()) {
     redirect("/");
@@ -71,7 +95,7 @@ export default function ServicesPage() {
 
         <div className="space-y-16 md:space-y-24">
           <section>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {servicesForIds(obviousServiceIds).map((service) => (
                 <Link
                   key={service.id}
@@ -79,17 +103,7 @@ export default function ServicesPage() {
                   aria-label={`Request a quote for ${service.name}`}
                   className="group flex min-h-full cursor-pointer flex-col overflow-hidden border border-slate-200 bg-white shadow-sm transition-all duration-200 ease-out hover:border-brand-primary/70 hover:shadow-lg hover:ring-1 hover:ring-brand-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary"
                 >
-                  {service.imageSrc && (
-                    <div className="relative h-48 w-full overflow-hidden bg-slate-100 md:h-52">
-                      <Image
-                        src={service.imageSrc}
-                        alt={service.imageAlt ?? ""}
-                        fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        className="object-cover transition-transform duration-200 ease-out group-hover:scale-[1.03]"
-                      />
-                    </div>
-                  )}
+                  <ServiceVisual service={service} />
 
                   <div className="flex flex-1 flex-col gap-5 p-5 md:p-6">
                     <div className="space-y-2">

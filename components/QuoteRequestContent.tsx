@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { QuoteForm } from "@/components/QuoteForm";
+import { RideshareInspectionGraphic } from "@/components/RideshareInspectionGraphic";
 import {
   getServiceMenuItem,
   normalizeServiceId,
@@ -46,6 +47,10 @@ function SelectedServiceCard({ serviceType }: { serviceType: string }) {
           />
         </div>
       )}
+      {!selectedService.imageSrc &&
+        selectedService.id === "rideshare_inspection" && (
+          <RideshareInspectionGraphic compact />
+        )}
 
       <div className="p-5">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-primary">

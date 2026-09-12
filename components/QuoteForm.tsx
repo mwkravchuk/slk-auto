@@ -109,6 +109,13 @@ export function QuoteForm({
   const inputBase =
     "w-full border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary";
   const labelBase = "mb-1 block text-xs font-semibold text-slate-800";
+  const isRideshareInspection = form.serviceType === "rideshare_inspection";
+  const descriptionLabel = isRideshareInspection
+    ? "Inspection notes"
+    : "What is going on?";
+  const descriptionPlaceholder = isRideshareInspection
+    ? "Platform, city or market, current mileage, and whether this is a first approval or renewal."
+    : "Symptoms, warning lights, noises, when it started, or anything already checked.";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-7">
@@ -313,16 +320,24 @@ export function QuoteForm({
           </div>
         )}
 
+        {isRideshareInspection && (
+          <div className="border border-brand-accent bg-[#fff8df] px-4 py-3 text-xs leading-5 text-slate-700">
+            Common Uber, Lyft, and local TNC forms can be ready at the
+            appointment. Share your platform, city, and mileage so the right
+            form is used.
+          </div>
+        )}
+
         <div>
           <label className={labelBase} htmlFor="quote-description">
-            What is going on? <RequiredMark />
+            {descriptionLabel} <RequiredMark />
           </label>
           <textarea
             id="quote-description"
             className={`${inputBase} min-h-28 resize-y`}
             value={form.description}
             onChange={(e) => updateField("description", e.target.value)}
-            placeholder="Symptoms, warning lights, noises, when it started, or anything already checked."
+            placeholder={descriptionPlaceholder}
             required
           />
         </div>

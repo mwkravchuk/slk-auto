@@ -51,6 +51,17 @@ export const serviceMenu: ServiceMenuItem[] = [
     imageAlt: "Mechanic testing a car battery",
   },
   {
+    id: "rideshare_inspection",
+    name: "Rideshare vehicle inspection",
+    formLabel: "Rideshare vehicle inspection",
+    summary:
+      "Vehicle inspections for Uber, Lyft, and other TNC driver requirements where accepted locally.",
+    typicalTime: "30-45 min",
+    priceNote: "Starting at $40",
+    quoteHint:
+      "Helpful details: rideshare platform, city or market, current mileage, and whether this is a first approval or renewal inspection.",
+  },
+  {
     id: "diagnostics",
     name: "Warning lights & diagnostics",
     formLabel: "Check engine light / diagnostic",
@@ -105,6 +116,9 @@ const legacyServiceAliases = new Map([
   ["battery", "battery_replacement"],
   ["battery_no_start", "battery_replacement"],
   ["diagnostic", "diagnostics"],
+  ["rideshare", "rideshare_inspection"],
+  ["uber_inspection", "rideshare_inspection"],
+  ["lyft_inspection", "rideshare_inspection"],
 ]);
 
 export function normalizeServiceId(serviceId: unknown) {

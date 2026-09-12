@@ -29,7 +29,7 @@ export function generateMetadata(): Metadata {
   return {
     title: "SLK Auto Repair - Mobile Auto Repair in Sacramento",
     description:
-      "Request a clear quote for mobile auto repair in the Sacramento area. Oil changes, brakes, diagnostics, battery help, and more from SLK Auto Repair.",
+      "Request a clear quote for mobile auto repair in the Sacramento area. Oil changes, brakes, rideshare inspections, diagnostics, battery help, and more from SLK Auto Repair.",
   };
 }
 

@@ -2,11 +2,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { isHoldingSite } from "@/lib/siteMode";
+import { RideshareInspectionGraphic } from "@/components/RideshareInspectionGraphic";
 
 const quickServiceLinks = [
   { label: "Oil change", href: "/quote?service=oil_change" },
   { label: "Brakes", href: "/quote?service=brakes" },
   { label: "Battery", href: "/quote?service=battery_replacement" },
+  { label: "Rideshare inspection", href: "/quote?service=rideshare_inspection" },
   { label: "Check engine light", href: "/quote?service=diagnostics" },
   { label: "Not sure yet", href: "/quote?service=other" },
 ];
@@ -52,7 +54,8 @@ export default function HomePage() {
                   </h1>
                   <p className="max-w-xl text-base leading-7 text-slate-200 sm:text-lg">
                     Mobile auto repair that comes to you for maintenance,
-                    brakes, diagnostics, and no-start help.
+                    brakes, diagnostics, rideshare inspections, and no-start
+                    help.
                   </p>
                 </div>
 
@@ -83,9 +86,9 @@ export default function HomePage() {
               What I can help with
             </h2>
             <p className="text-sm leading-6 text-slate-600">
-              Common mobile services for everyday maintenance and repairs. The
-              full services page has rough time ranges and quote guidance when
-              you want more detail.
+              Common mobile services for everyday maintenance, inspections, and
+              repairs. The full services page has rough time ranges and quote
+              guidance when you want more detail.
             </p>
           </div>
 
@@ -134,6 +137,21 @@ export default function HomePage() {
             </article>
 
             <article className="md:flex md:items-center md:gap-8">
+              <div className="w-full overflow-hidden md:w-[46%]">
+                <RideshareInspectionGraphic />
+              </div>
+              <div className="flex flex-col justify-center py-4 md:flex-1 md:py-0">
+                <h3 className="text-xl font-semibold text-slate-950">
+                  Rideshare vehicle inspections
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Vehicle inspections for Uber, Lyft, and other TNC driver
+                  requirements where local rules accept third-party inspections.
+                </p>
+              </div>
+            </article>
+
+            <article className="md:flex md:flex-row-reverse md:items-center md:gap-8">
               <div className="relative h-52 w-full overflow-hidden bg-slate-100 sm:h-64 md:w-[46%]">
                 <Image
                   src="/images/service-battery.avif"
