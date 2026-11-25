@@ -78,6 +78,7 @@ export async function POST(req: Request) {
       if (typeof value !== "string" || value.length > max) return NextResponse.json({ error: "Invalid or overly long form field." }, { status: 400 });
     }
     const quoteRequest = parseQuoteRequest(body);
+    if ([quoteRequest.year, quoteRequest.make, quoteRequest.model, quoteRequest.email].some((value) => /[\r\n]/.test(value))) return NextResponse.json({ error: "Invalid vehicle or email field." }, { status: 400 });
     const missingFields = requiredFields
       .filter(([key]) => !quoteRequest[key])
       .map(([, label]) => label);
@@ -100,7 +101,7 @@ export async function POST(req: Request) {
     if (mode !== "test" && mode !== "live") {
       return NextResponse.json({ error: "Email delivery is disabled in this environment." }, { status: 503 });
     }
-    if (mode === "live" && process.env.VERCEL_ENV !== "production") {
+    if (mode === "live" && (process.env.VERCEL_ENV !== "production" || process.env.TURNSTILE_EXPECTED_HOSTNAME !== "www.slkautorepair.com")) {
       return NextResponse.json({ error: "Live email delivery is unavailable here." }, { status: 503 });
     }
     const test = mode === "test";
