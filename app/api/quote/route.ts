@@ -71,10 +71,10 @@ export async function POST(req: Request) {
     const body = raw as Record<string, unknown>;
     if (typeof body.submissionId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.submissionId)) return NextResponse.json({ error: "Invalid submission ID. Reload the page and try again." }, { status: 400 });
     submissionId = body.submissionId;
-    const allowed = new Set(["submissionId","name","email","phone","vin","year","make","model","engine","mileage","serviceType","description","location"]);
+    const allowed = new Set(["submissionId","turnstileToken","name","email","phone","vin","year","make","model","engine","mileage","serviceType","description","location"]);
     for (const [key, value] of Object.entries(body)) {
       if (!allowed.has(key)) return NextResponse.json({ error: "Unexpected form field." }, { status: 400 });
-      const max = key === "description" ? 3000 : key === "location" ? 300 : 254;
+      const max = key === "turnstileToken" ? 2048 : key === "description" ? 3000 : key === "location" ? 300 : 254;
       if (typeof value !== "string" || value.length > max) return NextResponse.json({ error: "Invalid or overly long form field." }, { status: 400 });
     }
     const quoteRequest = parseQuoteRequest(body);
@@ -118,6 +118,31 @@ export async function POST(req: Request) {
       );
     }
 
+    const secret = process.env.TURNSTILE_SECRET_KEY;
+    const hostname = process.env.TURNSTILE_EXPECTED_HOSTNAME;
+    if (!secret || !hostname) {
+      quoteLog("quote.security_config_missing", submissionId);
+      return NextResponse.json({ error: "Security check unavailable. Please try again later." }, { status: 503 });
+    }
+    if (typeof body.turnstileToken !== "string" || !body.turnstileToken) return NextResponse.json({ error: "Please complete the security check." }, { status: 400 });
+    try {
+      const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ secret, response: body.turnstileToken }),
+        signal: AbortSignal.timeout(8000),
+        cache: "no-store",
+      });
+      if (!response.ok) throw new Error("Verification unavailable");
+      const verification = await response.json();
+      if (verification.success !== true || verification.hostname !== hostname || verification.action !== "quote") {
+        quoteLog("quote.challenge_rejected", submissionId);
+        return NextResponse.json({ error: "Security check expired or failed. Please try again." }, { status: 400 });
+      }
+    } catch {
+      quoteLog("quote.challenge_unavailable", submissionId);
+      return NextResponse.json({ error: "Security check unavailable. Please try again." }, { status: 503 });
+    }
     quoteLog("quote.validated", submissionId, { mode });
     const resend = new Resend(apiKey);
     const serviceLabel = getServiceLabel(quoteRequest.serviceType);
