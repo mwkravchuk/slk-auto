@@ -83,9 +83,19 @@ export function QuoteForm({
   const [verified, setVerified] = useState(false);
   const [challengeError, setChallengeError] = useState(false);
   const successHeading = useRef<HTMLHeadingElement>(null);
+  const successPanel = useRef<HTMLElement>(null);
   const succeeded = status === "success";
   useEffect(() => {
-    if (status === "success") successHeading.current?.focus();
+    if (status !== "success") return;
+    const panel = successPanel.current;
+    if (!panel) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    successHeading.current?.focus({ preventScroll: true });
+    const frame = requestAnimationFrame(() => {
+      panel.scrollIntoView({ behavior: reduced ? "instant" : "smooth", block: "center" });
+      if (!reduced) panel.animate([{ opacity: 0, transform: "translateY(12px)" }, { opacity: 1, transform: "translateY(0)" }], { duration: 360, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)", fill: "both" });
+    });
+    return () => cancelAnimationFrame(frame);
   }, [status]);
 
   useEffect(() => {
@@ -179,7 +189,7 @@ export function QuoteForm({
 
   if (status === "success") {
     return (
-      <section className="border border-slate-200 bg-white px-6 py-10 text-center sm:px-10 sm:py-14">
+      <section ref={successPanel} className="border border-slate-200 bg-white px-6 py-10 text-center sm:px-10 sm:py-14">
         <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-brand-primary text-brand-accent">
           <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 6" /></svg>
         </div>
@@ -188,7 +198,7 @@ export function QuoteForm({
           We’ll review your request and follow up with pricing and availability.
         </p>
         <p className="mt-3 text-xs leading-5 text-slate-500">Please check your email for a confirmation.</p>
-        <button type="button" onClick={startAnotherRequest} className="mt-7 text-sm font-semibold text-brand-primary underline underline-offset-4">
+        <button type="button" onClick={startAnotherRequest} className="mt-7 cursor-pointer text-sm font-semibold text-brand-primary underline underline-offset-4">
           Submit another request
         </button>
       </section>
@@ -436,7 +446,7 @@ export function QuoteForm({
         <button
           type="submit"
           disabled={isSubmitting || Boolean(siteKey && !verified)}
-          className="inline-flex w-full items-center justify-center bg-brand-primary px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-soft disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          className="inline-flex w-full cursor-pointer items-center justify-center bg-brand-primary px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-soft disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
         >
           {isSubmitting ? "Sending..." : "Send request"}
         </button>
