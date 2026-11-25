@@ -82,8 +82,14 @@ export function QuoteForm({
   const [scriptReady, setScriptReady] = useState(false);
   const [verified, setVerified] = useState(false);
   const [challengeError, setChallengeError] = useState(false);
+  const successHeading = useRef<HTMLHeadingElement>(null);
+  const succeeded = status === "success";
   useEffect(() => {
-    if (!siteKey || !scriptReady || !widgetContainer.current) return;
+    if (status === "success") successHeading.current?.focus();
+  }, [status]);
+
+  useEffect(() => {
+    if (succeeded || !siteKey || !scriptReady || !widgetContainer.current) return;
     const api = turnstileApi();
     if (!api) return;
     widgetId.current = api.render(widgetContainer.current, {
@@ -94,17 +100,18 @@ export function QuoteForm({
       "error-callback": () => { token.current = ""; setVerified(false); setChallengeError(true); },
     });
     return () => { if (widgetId.current !== null) api.remove(widgetId.current); widgetId.current = null; token.current = ""; };
-  }, [siteKey, scriptReady]);
+  }, [siteKey, scriptReady, succeeded]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (sending.current) return;
+    if (sending.current || status === "success") return;
     if (siteKey && !token.current) { setStatus("error"); setErrorMessage("Please complete the security check."); return; }
     sending.current = true;
     setIsSubmitting(true);
     setStatus("idle");
     setErrorMessage("");
 
+    let accepted = false;
     try {
       const payload = JSON.stringify(form);
       if (submission.current?.payload !== payload) submission.current = { payload, id: crypto.randomUUID() };
@@ -119,18 +126,18 @@ export function QuoteForm({
         throw new Error(data.error || "Failed to send quote request.");
       }
 
+      const result = await res.json();
+      if (result.ok !== true) throw new Error("Could not confirm submission. Please try again.");
+      accepted = true;
       submission.current = null;
-      const resetForm = createInitialForm(initialServiceType);
       setStatus("success");
-      setForm(resetForm);
-      onServiceTypeChange?.(resetForm.serviceType);
     } catch (err: unknown) {
       setStatus("error");
       setErrorMessage(
         err instanceof Error ? err.message : "Something went wrong."
       );
     } finally {
-      if (siteKey && widgetId.current !== null) { token.current = ""; setVerified(false); turnstileApi()?.reset(widgetId.current); }
+      if (siteKey) { token.current = ""; setVerified(false); if (!accepted && widgetId.current !== null) turnstileApi()?.reset(widgetId.current); }
       sending.current = false;
       setIsSubmitting(false);
     }
@@ -147,6 +154,18 @@ export function QuoteForm({
     }
   }
 
+  function startAnotherRequest() {
+    const resetForm = createInitialForm(initialServiceType);
+    submission.current = null;
+    token.current = "";
+    setVerified(false);
+    setChallengeError(false);
+    setErrorMessage("");
+    setForm(resetForm);
+    onServiceTypeChange?.(resetForm.serviceType);
+    setStatus("idle");
+  }
+
   const inputBase =
     "w-full border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary";
   const labelBase = "mb-1 block text-xs font-semibold text-slate-800";
@@ -157,6 +176,24 @@ export function QuoteForm({
   const descriptionPlaceholder = isRideshareInspection
     ? "Platform, city or market, current mileage, and whether this is a first approval or renewal."
     : "Symptoms, warning lights, noises, when it started, or anything already checked.";
+
+  if (status === "success") {
+    return (
+      <section className="border border-slate-200 bg-white px-6 py-10 text-center sm:px-10 sm:py-14">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-brand-primary text-brand-accent">
+          <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 4 4L19 6" /></svg>
+        </div>
+        <h2 ref={successHeading} tabIndex={-1} className="text-2xl font-semibold text-slate-950 outline-none">Request received</h2>
+        <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-slate-600">
+          We’ll review your request and follow up with pricing and availability.
+        </p>
+        <p className="mt-3 text-xs leading-5 text-slate-500">Please check your email for a confirmation.</p>
+        <button type="button" onClick={startAnotherRequest} className="mt-7 text-sm font-semibold text-brand-primary underline underline-offset-4">
+          Submit another request
+        </button>
+      </section>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-7">
@@ -385,11 +422,6 @@ export function QuoteForm({
       </section>
 
       <div className="space-y-4 border-t border-slate-200 pt-5">
-        {status === "success" && (
-          <div className="border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-5 text-emerald-800">
-            Sent. We will review the details and follow up with the next step.
-          </div>
-        )}
         {status === "error" && (
           <div className="border border-red-200 bg-red-50 px-3 py-2 text-xs leading-5 text-red-800">
             {errorMessage || "Something went wrong sending your request."}
