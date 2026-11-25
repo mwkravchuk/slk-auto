@@ -37,6 +37,10 @@ function parseQuoteRequest(body: Record<string, unknown>): QuoteRequest {
   };
 }
 
+function quoteLog(event: string, submissionId: string, fields: Record<string, unknown> = {}) {
+  console.info(JSON.stringify({ event, submissionId, ...fields }));
+}
+
 export async function POST(req: Request) {
   if (isHoldingSite()) {
     return NextResponse.json(
@@ -45,12 +49,31 @@ export async function POST(req: Request) {
     );
   }
 
+  let submissionId = "unknown";
   try {
+    if (!req.headers.get("content-type")?.toLowerCase().startsWith("application/json")) return NextResponse.json({ error: "Expected JSON." }, { status: 415 });
+    const reader = req.body?.getReader();
+    if (!reader) return NextResponse.json({ error: "Missing request body." }, { status: 400 });
+    const decoder = new TextDecoder();
+    let bytes = 0;
+    let payload = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytes += value.byteLength;
+      if (bytes > 16384) { await reader.cancel(); return NextResponse.json({ error: "Request too large." }, { status: 413 }); }
+      payload += decoder.decode(value, { stream: true });
+    }
+    payload += decoder.decode();
     let raw: unknown;
-    try { raw = await req.json(); } catch { return NextResponse.json({ error: "Invalid request body." }, { status: 400 }); }
+    try { raw = JSON.parse(payload); } catch { return NextResponse.json({ error: "Invalid request body." }, { status: 400 }); }
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
     const body = raw as Record<string, unknown>;
+    if (typeof body.submissionId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.submissionId)) return NextResponse.json({ error: "Invalid submission ID. Reload the page and try again." }, { status: 400 });
+    submissionId = body.submissionId;
+    const allowed = new Set(["submissionId","name","email","phone","vin","year","make","model","engine","mileage","serviceType","description","location"]);
     for (const [key, value] of Object.entries(body)) {
+      if (!allowed.has(key)) return NextResponse.json({ error: "Unexpected form field." }, { status: 400 });
       const max = key === "description" ? 3000 : key === "location" ? 300 : 254;
       if (typeof value !== "string" || value.length > max) return NextResponse.json({ error: "Invalid or overly long form field." }, { status: 400 });
     }
@@ -95,6 +118,7 @@ export async function POST(req: Request) {
       );
     }
 
+    quoteLog("quote.validated", submissionId, { mode });
     const resend = new Resend(apiKey);
     const serviceLabel = getServiceLabel(quoteRequest.serviceType);
     const subject = `${test ? "[TEST] " : ""}Quote request: ${serviceLabel} - ${vehicleName(
@@ -108,16 +132,17 @@ export async function POST(req: Request) {
       text: buildOwnerText(quoteRequest),
       html: buildOwnerHtml(quoteRequest),
       replyTo: test ? to : quoteRequest.email,
-    });
+    }, { idempotencyKey: `quote/${mode}/${submissionId}/owner` });
 
     if (ownerResult.error) {
-      console.error("Resend error (to owner):", ownerResult.error);
+      quoteLog("quote.owner_failed", submissionId, { code: ownerResult.error.name });
       return NextResponse.json(
         { error: "Failed to send quote request." },
         { status: 500 }
       );
     }
 
+    quoteLog("quote.owner_accepted", submissionId, { emailId: ownerResult.data?.id });
     try {
     const confirmResult = await resend.emails.send({
       from,
@@ -126,18 +151,20 @@ export async function POST(req: Request) {
       text: buildCustomerText(quoteRequest),
       html: buildCustomerHtml(quoteRequest),
       replyTo: to,
-    });
+    }, { idempotencyKey: `quote/${mode}/${submissionId}/customer` });
 
     if (confirmResult.error) {
-      console.error("Resend error (to customer):", confirmResult.error);
+      quoteLog("quote.customer_failed", submissionId, { code: confirmResult.error.name });
+    } else {
+      quoteLog("quote.customer_accepted", submissionId, { emailId: confirmResult.data?.id });
     }
 
     } catch {
-      console.error("Customer confirmation send threw after owner email was accepted.");
+      quoteLog("quote.customer_exception", submissionId);
     }
     return NextResponse.json({ ok: true });
-  } catch (err) {
-    console.error("Error in /api/quote:", err);
+  } catch {
+    quoteLog("quote.exception", submissionId);
     return NextResponse.json(
       { error: "Failed to submit quote request." },
       { status: 500 }
