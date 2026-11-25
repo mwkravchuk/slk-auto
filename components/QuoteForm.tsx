@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useRef, type FormEvent } from "react";
 import {
   normalizeServiceId,
   quoteServiceOptions,
@@ -63,17 +63,24 @@ export function QuoteForm({
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
+  const submission = useRef<{ payload: string; id: string } | null>(null);
+  const sending = useRef(false);
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (sending.current) return;
+    sending.current = true;
     setIsSubmitting(true);
     setStatus("idle");
     setErrorMessage("");
 
     try {
+      const payload = JSON.stringify(form);
+      if (submission.current?.payload !== payload) submission.current = { payload, id: crypto.randomUUID() };
       const res = await fetch("/api/quote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, submissionId: submission.current.id }),
       });
 
       if (!res.ok) {
@@ -81,6 +88,7 @@ export function QuoteForm({
         throw new Error(data.error || "Failed to send quote request.");
       }
 
+      submission.current = null;
       const resetForm = createInitialForm(initialServiceType);
       setStatus("success");
       setForm(resetForm);
@@ -91,6 +99,7 @@ export function QuoteForm({
         err instanceof Error ? err.message : "Something went wrong."
       );
     } finally {
+      sending.current = false;
       setIsSubmitting(false);
     }
   }
