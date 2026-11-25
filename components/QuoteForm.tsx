@@ -1,10 +1,20 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useRef, useEffect, type FormEvent } from "react";
+import Script from "next/script";
 import {
   normalizeServiceId,
   quoteServiceOptions,
 } from "@/lib/services";
+
+type TurnstileApi = {
+  render: (container: HTMLElement, options: { sitekey: string; action: string; callback: (token: string) => void; "expired-callback": () => void; "error-callback": () => void }) => string;
+  reset: (id: string) => void;
+  remove: (id: string) => void;
+};
+function turnstileApi() {
+  return (window as Window & { turnstile?: TurnstileApi }).turnstile;
+}
 
 type QuoteFormData = {
   name: string;
@@ -63,17 +73,45 @@ export function QuoteForm({
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
+  const submission = useRef<{ payload: string; id: string } | null>(null);
+  const sending = useRef(false);
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  const widgetContainer = useRef<HTMLDivElement>(null);
+  const widgetId = useRef<string | null>(null);
+  const token = useRef("");
+  const [scriptReady, setScriptReady] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const [challengeError, setChallengeError] = useState(false);
+  useEffect(() => {
+    if (!siteKey || !scriptReady || !widgetContainer.current) return;
+    const api = turnstileApi();
+    if (!api) return;
+    widgetId.current = api.render(widgetContainer.current, {
+      sitekey: siteKey,
+      action: "quote",
+      callback: (value) => { token.current = value; setVerified(true); setChallengeError(false); },
+      "expired-callback": () => { token.current = ""; setVerified(false); },
+      "error-callback": () => { token.current = ""; setVerified(false); setChallengeError(true); },
+    });
+    return () => { if (widgetId.current !== null) api.remove(widgetId.current); widgetId.current = null; token.current = ""; };
+  }, [siteKey, scriptReady]);
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (sending.current) return;
+    if (siteKey && !token.current) { setStatus("error"); setErrorMessage("Please complete the security check."); return; }
+    sending.current = true;
     setIsSubmitting(true);
     setStatus("idle");
     setErrorMessage("");
 
     try {
+      const payload = JSON.stringify(form);
+      if (submission.current?.payload !== payload) submission.current = { payload, id: crypto.randomUUID() };
       const res = await fetch("/api/quote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, submissionId: submission.current.id, turnstileToken: token.current }),
       });
 
       if (!res.ok) {
@@ -81,6 +119,7 @@ export function QuoteForm({
         throw new Error(data.error || "Failed to send quote request.");
       }
 
+      submission.current = null;
       const resetForm = createInitialForm(initialServiceType);
       setStatus("success");
       setForm(resetForm);
@@ -91,6 +130,8 @@ export function QuoteForm({
         err instanceof Error ? err.message : "Something went wrong."
       );
     } finally {
+      if (siteKey && widgetId.current !== null) { token.current = ""; setVerified(false); turnstileApi()?.reset(widgetId.current); }
+      sending.current = false;
       setIsSubmitting(false);
     }
   }
@@ -355,9 +396,14 @@ export function QuoteForm({
           </div>
         )}
 
+        {siteKey && <>
+          <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" strategy="afterInteractive" onReady={() => setScriptReady(true)} onError={() => setChallengeError(true)} />
+          <div ref={widgetContainer} />
+          {challengeError && <p role="alert" className="text-xs text-red-800">Security check failed to load. Reload the page or try another browser.</p>}
+        </>}
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || Boolean(siteKey && !verified)}
           className="inline-flex w-full items-center justify-center bg-brand-primary px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-primary-soft disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
         >
           {isSubmitting ? "Sending..." : "Send request"}
