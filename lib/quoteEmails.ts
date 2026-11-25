@@ -42,205 +42,85 @@ export function vehicleName(request: QuoteRequest) {
   return [request.year, request.make, request.model].filter(Boolean).join(" ");
 }
 
-function textField(label: string, value: string) {
-  return `- ${label}: ${display(value)}`;
+const logoUrl = "https://www.slkautorepair.com/images/slk-logo-transparent.png";
+
+function rows(fields: Array<[string, string]>) {
+  return fields.map(([label, value]) => `<tr><td width="34%" valign="top" style="padding:7px 8px 7px 0;color:#475569;font-size:14px;line-height:1.5;">${escapeHtml(label)}</td><td valign="top" style="padding:7px 0;color:#0f172a;font-size:14px;line-height:1.5;font-weight:600;overflow-wrap:anywhere;word-break:break-word;">${escapeHtml(display(value)).replace(/\n/g,"<br>")}</td></tr>`).join("");
 }
 
-function htmlRows(rows: Array<[string, string]>) {
-  return rows
-    .map(
-      ([label, value]) => `
-        <tr>
-          <td style="padding: 8px 0; color: #64748b; vertical-align: top; width: 32%; overflow-wrap: anywhere;">${escapeHtml(
-            label
-          )}</td>
-          <td style="padding: 8px 0; color: #0f172a; font-weight: 600; overflow-wrap: anywhere;">${escapeHtml(
-            display(value)
-          )}</td>
-        </tr>`
-    )
-    .join("");
+function section(title: string, html: string) {
+  return `<h2 style="font-size:17px;line-height:1.4;margin:0 0 8px;color:#071b3a;">${escapeHtml(title)}</h2>${html}`;
 }
 
-export function buildOwnerText(request: QuoteRequest) {
-  const serviceLabel = getServiceLabel(request.serviceType);
-  const selectedService = getServiceMenuItem(request.serviceType);
-
-  const menuGuide = selectedService
-    ? `
-Menu guide (not final estimate):
-${textField("Typical time", selectedService.typicalTime)}
-${textField("Price guide", selectedService.priceNote)}
-${textField("Helpful context", selectedService.quoteHint)}
-`
-    : "";
-
-  return `New quote request for SLK Auto Repair
-
-Priority summary:
-${textField("Service", serviceLabel)}
-${textField("Vehicle", vehicleName(request))}
-${textField("Location", request.location)}
-${textField("Reply-to email", request.email)}
-${textField("Phone", request.phone)}
-${menuGuide}
-Customer notes:
-${display(request.description)}
-
-Vehicle details:
-${textField("Year/Make/Model", vehicleName(request))}
-${textField("Mileage", request.mileage)}
-${textField("Engine", request.engine)}
-${textField("VIN", request.vin)}
-
-Customer:
-${textField("Name", request.name)}
-${textField("Email", request.email)}
-${textField("Phone", request.phone)}
-
-Pricing note:
-The menu time and price are only planning guides. Confirm exact parts, labor, timing, and final pricing with the customer before booking.`;
+function table(fields: Array<[string, string]>) {
+  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;table-layout:fixed;">${rows(fields)}</table>`;
 }
 
-export function buildOwnerHtml(request: QuoteRequest) {
-  const serviceLabel = getServiceLabel(request.serviceType);
-  const selectedService = getServiceMenuItem(request.serviceType);
-  const notesHtml = escapeHtml(display(request.description)).replace(
-    /\n/g,
-    "<br />"
-  );
+function shell(title: string, subtitle: string, body: string) {
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#f8fafc;font-family:Arial,sans-serif;color:#0f172a;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f8fafc;"><tr><td align="center" style="padding:10px;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;background:#ffffff;"><tr><td align="center" bgcolor="#071b3a" style="background:#071b3a;color:#ffffff;padding:32px 10px 28px;border-bottom:3px solid #f4c041;"><img src="${logoUrl}" alt="SLK Auto Repair" width="200" style="display:block;width:200px;max-width:100%;height:auto;margin:0 auto 24px;color:#ffffff;font-size:18px;"><h1 style="margin:0;color:#ffffff;font-size:30px;font-weight:600;line-height:1.15;letter-spacing:-0.7px;">${escapeHtml(title)}</h1><p style="margin:12px 0 0;color:#dbe3ee;font-size:15px;line-height:1.5;">${escapeHtml(subtitle)}</p></td></tr><tr><td bgcolor="#ffffff" style="background:#ffffff;padding:22px 10px 24px;">${body}</td></tr></table></td></tr></table></body></html>`;
+}
 
-  return `<!doctype html>
-<html>
-  <body style="margin: 0; background: #f8fafc; font-family: Arial, sans-serif; color: #0f172a;">
-    <div style="max-width: 680px; margin: 0 auto; padding: 24px;">
-      <div style="background: #071b3a; color: white; padding: 24px; border-bottom: 4px solid #f4c041;">
-        <p style="margin:0 0 14px; font-size:16px; font-weight:700; letter-spacing:0.04em;">SLK AUTO REPAIR</p>
-        <p style="margin: 0 0 8px; color: #f4c041; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;">New quote request</p>
-        <h1 style="margin: 0; font-size: 26px; line-height: 1.25;">${escapeHtml(
-          serviceLabel
-        )}</h1>
-        <p style="margin: 8px 0 0; color: #cbd5e1;">${escapeHtml(
-          vehicleName(request)
-        )} - ${escapeHtml(request.location)}</p>
-      </div>
+function button(label: string, href: string, gold = false) {
+  return `<a href="${escapeHtml(href)}" style="display:inline-block;background:${gold ? "#f4c041" : "#071b3a"};color:${gold ? "#071b3a" : "#ffffff"};font-size:14px;font-weight:700;text-decoration:none;padding:12px 16px;margin:4px;border-radius:6px;">${escapeHtml(label)}</a>`;
+}
 
-      <div style="background: white; border: 1px solid #e2e8f0; border-top: 0; padding: 22px;">
-        <h2 style="margin: 0 0 10px; font-size: 16px;">Customer &amp; contact</h2>
-        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-          ${htmlRows([
-            ["Customer", request.name],
-            ["Reply-to email", request.email],
-            ["Phone", request.phone],
-            ["Vehicle", vehicleName(request)],
-            ["Location", request.location],
-          ])}
-        </table>
+function requestFields(request: QuoteRequest): Array<[string, string]> {
+  return [["Service", getServiceLabel(request.serviceType)], ["Vehicle", vehicleName(request)], ["Location", request.location], ["Notes", request.description]];
+}
 
-        ${
-          selectedService
-            ? `<div style="margin-top: 18px; background: #fff8df; border-left: 4px solid #f4c041; padding: 14px 16px;">
-                <p style="margin: 0 0 8px; font-size: 12px; font-weight: 700; color: #475569; letter-spacing: 0.1em; text-transform: uppercase;">Menu guide, not final estimate</p>
-                <p style="margin: 0; font-size: 14px;"><strong>Typical time:</strong> ${escapeHtml(
-                  selectedService.typicalTime
-                )}</p>
-                <p style="margin: 6px 0 0; font-size: 14px;"><strong>Price guide:</strong> ${escapeHtml(
-                  selectedService.priceNote
-                )}</p>
-                <p style="margin: 10px 0 0; font-size: 13px; line-height: 1.5; color: #475569;">${escapeHtml(
-                  selectedService.quoteHint
-                )}</p>
-              </div>`
-            : ""
-        }
+function contactFields(request: QuoteRequest): Array<[string, string]> {
+  return [["Name", request.name], ["Email", request.email], ["Phone", request.phone]].filter((field) => field[1]) as Array<[string,string]>;
+}
 
-        <div style="margin-top: 22px;">
-          <h2 style="margin: 0 0 10px; font-size: 16px;">Customer notes</h2>
-          <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px 16px; font-size: 14px; line-height: 1.6;">${notesHtml}</div>
-        </div>
+function vehicleFields(request: QuoteRequest): Array<[string, string]> {
+  return [["Mileage", request.mileage], ["Engine", request.engine], ["VIN", request.vin]].filter((field) => field[1]) as Array<[string,string]>;
+}
 
-        <div style="margin-top: 22px;">
-          <h2 style="margin: 0 0 10px; font-size: 16px;">Vehicle details</h2>
-          <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-            ${htmlRows([
-              ["Year/Make/Model", vehicleName(request)],
-              ["Mileage", request.mileage],
-              ["Engine", request.engine],
-              ["VIN", request.vin],
-            ])}
-          </table>
-        </div>
-
-        <div style="margin-top: 22px; border-top: 1px solid #e2e8f0; padding-top: 16px; font-size: 12px; line-height: 1.5; color: #64748b;">
-          Menu times and prices are planning guides only. Confirm exact parts, labor, timing, and final pricing with the customer before booking.
-        </div>
-      </div>
-    </div>
-  </body>
-</html>`;
+function plain(fields: Array<[string,string]>) {
+  return fields.map(([label,value]) => label + ": " + display(value)).join("\n");
 }
 
 export function buildCustomerText(request: QuoteRequest) {
-  const serviceLabel = getServiceLabel(request.serviceType);
+  return `Request received
 
-  return `Hi ${request.name},
+We'll review your request and follow up with pricing and availability.
 
-Thanks for reaching out to SLK Auto Repair. We received your request and will review the vehicle details before confirming the next step.
+Your request
+${plain(requestFields(request))}
 
-What happens next:
-- We check whether the job is a fit for mobile service.
-- We confirm parts, pricing, timing, and availability before booking.
-- If anything important is missing, we can reply to this email.
-
-Your request:
-${textField("Service", serviceLabel)}
-${textField("Vehicle", vehicleName(request))}
-${textField("Location", request.location)}
-${textField("Notes", request.description)}
-
-Final pricing is confirmed after we review the details.
+Need to add anything? Reply to this email.
 
 SLK Auto Repair`;
 }
 
 export function buildCustomerHtml(request: QuoteRequest) {
-  const serviceLabel = getServiceLabel(request.serviceType);
-
-  return `<!doctype html>
-<html>
-  <body style="margin: 0; background: #f8fafc; font-family: Arial, sans-serif; color: #0f172a;">
-    <div style="max-width: 640px; margin: 0 auto; padding: 24px;">
-      <div style="background: #071b3a; color: #ffffff; padding: 22px 24px; border-bottom: 4px solid #f4c041;"><p style="margin:0; font-size:22px; font-weight:700; letter-spacing:0.04em;">SLK AUTO REPAIR</p><p style="margin:6px 0 0; color:#cbd5e1; font-size:12px; letter-spacing:0.06em;">MOBILE AUTOMOTIVE SERVICE</p></div>
-      <div style="background: white; border: 1px solid #e2e8f0; padding: 24px;">
-        <p style="margin: 0 0 8px; color: #0b4f7c; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;">SLK Auto Repair</p>
-        <h1 style="margin: 0; font-size: 24px; line-height: 1.25;">Thanks for reaching out.</h1>
-        <p style="margin: 12px 0 0; color: #475569; line-height: 1.6;">Hi ${escapeHtml(request.name)}, we received your quote request. We will review your vehicle details and follow up to confirm pricing, parts, timing, and availability.</p>
-
-        <div style="margin-top: 20px; background: #fff8df; border-left: 4px solid #f4c041; padding: 14px 16px;">
-          <p style="margin: 0; font-weight: 700;">What happens next</p>
-          <ol style="margin: 8px 0 0; padding-left: 18px; color: #475569; line-height: 1.6;">
-            <li>We check whether the job is a fit for mobile service.</li>
-            <li>We confirm parts, pricing, timing, and availability before booking.</li>
-            <li>If anything important is missing, we can reply to this email.</li>
-          </ol>
-        </div>
-
-        <div style="margin-top: 22px;">
-          <h2 style="margin: 0 0 10px; font-size: 16px;">Your request</h2>
-          <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-            ${htmlRows([
-              ["Service", serviceLabel],
-              ["Vehicle", vehicleName(request)],
-              ["Location", request.location],
-              ["Notes", request.description],
-            ])}
-          </table>
-        </div>
-
-        <p style="margin: 22px 0 0; font-size: 12px; line-height: 1.5; color: #64748b;">Final pricing is confirmed after we review the details. Need to add something? Simply reply to this email.</p>
-      </div>
-    </div>
-  </body>
-</html>`;
+  return shell("Request received", "We'll review your request and follow up with pricing and availability.", section("Your request", table(requestFields(request))) + '<p style="margin:20px 0 0;color:#475569;font-size:14px;line-height:1.5;">Need to add anything? Reply to this email.</p>');
 }
 
+export function buildOwnerText(request: QuoteRequest) {
+  const guide = getServiceMenuItem(request.serviceType);
+  const vehicle = vehicleFields(request);
+  return `New quote request — ${getServiceLabel(request.serviceType)}
+${vehicleName(request)} · ${request.location}
+
+Customer
+${plain(contactFields(request))}
+
+Customer notes
+${request.description}${vehicle.length ? "\n\nVehicle details\n" + plain(vehicle) : ""}${guide ? "\n\nPlanning guide (not a final quote)\n" + plain([["Typical time",guide.typicalTime],["Price",guide.priceNote]]) : ""}`;
+}
+
+export function buildOwnerHtml(request: QuoteRequest) {
+  const guide = getServiceMenuItem(request.serviceType);
+  const phone = request.phone.replace(/[^\d]/g, "");
+  const vehicle = vehicleFields(request);
+  const actions = button("Email customer", "mailto:" + encodeURIComponent(request.email), true) + (phone ? button("Call customer", "tel:" + (request.phone.trim().startsWith("+") ? "+" : "") + phone) : "");
+  const notes = `<p style="margin:0;font-size:15px;line-height:1.6;overflow-wrap:anywhere;">${escapeHtml(request.description).replace(/\n/g,"<br>")}</p>`;
+  const block = (html: string) => `<div style="border-top:1px solid #e2e8f0;padding-top:16px;margin-top:16px;">${html}</div>`;
+  return shell(getServiceLabel(request.serviceType), vehicleName(request) + " · " + request.location,
+    `<div style="text-align:center;margin:0 0 16px;">${actions}</div>` +
+    section("Customer", table(contactFields(request))) +
+    block(section("Customer notes",notes)) +
+    (vehicle.length ? block(section("Vehicle details",table(vehicle))) : "") +
+    (guide ? block(section("Planning guide (not a final quote)",table([["Typical time",guide.typicalTime],["Price",guide.priceNote]]))) : ""));
+}
